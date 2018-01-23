@@ -5,28 +5,32 @@ from src.game_field import GameField, ElementSymbol
 
 class Game:
     GAME_SCALE = 20
-    TICKS_PER_SECOND = 10
+    TICKS_PER_SECOND = 100
 
     def __init__(self, seed='03-03;17-05;08-10'):
-        self._running = True
+        self.running = True
         self._display_surface = None
         self.size = self.width, self.height = tuple((i*(Game.GAME_SCALE+1))-1 for i in GameField.FIELD_SIZE)
-        self.game_field = GameField(seed)
-        self.current_frame_game_field = self.game_field.get_game_field()
         self._pooled_event = None
+        self._seed = seed
         self.tick_length = 1000 / Game.TICKS_PER_SECOND
         self.fitness = 0
+        self.game_field = None
 
-    def on_init(self):
-        pygame.init()
-        self._display_surface = pygame.display.set_mode(self.size)
-        self._running = True
+    def on_init(self, gui=True):
+        if gui:
+            pygame.init()
+            self._display_surface = pygame.display.set_mode(self.size)
+
+        self.running = True
+        self.fitness = 0
+        self.game_field = GameField(self._seed)
         return True
 
     def on_event(self, interactive, event):
         if interactive:
             if event.type == pygame.QUIT:
-                self._running = False
+                self.running = False
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
@@ -46,12 +50,12 @@ class Game:
             self._pooled_event = event
 
     def on_loop(self):
-        self.fitness += 1
+        self.fitness -= 1
         self.game_field.update(self._pooled_event)
         self.game_field.update_ball()
 
         if self.game_field.check_win():
-            self._running = False
+            self.running = False
 
         if self._pooled_event is not None:
             self._pooled_event = None
@@ -88,33 +92,46 @@ class Game:
                 if field[x][y] == ElementSymbol.PADDLE:
                     self._display_surface.fill((0, 0, 255), pygame.Rect(val_x, val_y, Game.GAME_SCALE, Game.GAME_SCALE))
 
-    def run(self, moves=None):
+    def run(self, net=None, gui=True):
         tick = time.clock()
 
-        if not self.on_init():
-            self._running = False
+        if not self.on_init(gui):
+            self.running = False
 
-        while self._running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self._running = False
-                if moves is None:
-                    self.on_event(True, event)
-            if time.clock() - tick > self.tick_length / 1000:
-                if moves is not None:
-                    if len(moves) > 0:
-                        self.on_event(False, moves.pop(0))
-                    else:
-                        self.on_event(False, '-')
+        while self.running:
+            if net is not None and self.fitness < -100:
+                break
+            if gui:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.running = False
+                    if net is None:
+                        self.on_event(True, event)
+                if time.clock() - tick > self.tick_length / 1000:
+                    tick = time.clock()
+                    if net is not None:
+                        output = net.activate(self.game_field.serialized)
+                        selected = int(5 * output[0])
+                        move = ('u', 'd', 'r', 'l', 's', '-')[selected]
+                        self.on_event(False, move)
+                    self.on_loop()
+                self.on_render()
+
+            else:
+                if net is not None:
+                    output = net.activate(self.game_field.serialized)
+                    selected = int(5 * output[0])
+                    move = ('u', 'd', 'r', 'l', 's', '-')[selected]
+                    self.on_event(False, move)
                 self.on_loop()
-                tick = time.clock()
-            self.on_render()
 
-        print("fitness: " + str(self.fitness))
-        self.on_cleanup()
+        if gui:
+            print("Fitness: " + str(self.fitness))
+            self.on_cleanup()
+
 
     def simulate(self, moves):
-        while self._running:
+        while self.running:
             if len(moves) > 0:
                 self.on_event(False, moves.pop(0))
             else:

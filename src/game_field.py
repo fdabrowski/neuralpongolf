@@ -1,6 +1,7 @@
 from enum import Enum, IntEnum
 
-class ElementSymbol(Enum):
+
+class ElementSymbol(IntEnum):
     HOLE = 1
     BALL = 2
     PADDLE = 3
@@ -21,6 +22,11 @@ class GameField:
         self._ball_direction = (-1, 1)  # [0]: -1 - left, 1 - right; [1]: -1 - up, 1 - down
 
         self.place_elements(seed)
+
+        self.serialized = []
+        for i in range(GameField.FIELD_WIDTH):
+            for j in range(GameField.FIELD_HEIGHT):
+                self.serialized.append(self._game_field[i][j])
 
     def place_elements(self, seed = ''):
         if len(seed) == 17:
@@ -43,6 +49,11 @@ class GameField:
         self._game_field[self._paddle_position[0]+(1*int(self._paddle_horizontal))][self._paddle_position[1]+(1*int(not self._paddle_horizontal))] = ElementSymbol.PADDLE
         self._game_field[self._paddle_position[0]+(2*int(self._paddle_horizontal))][self._paddle_position[1]+(2*int(not self._paddle_horizontal))] = ElementSymbol.PADDLE
         self._game_field[self._paddle_position[0]+(3*int(self._paddle_horizontal))][self._paddle_position[1]+(3*int(not self._paddle_horizontal))] = ElementSymbol.PADDLE
+
+        self.serialized = []
+        for i in range(GameField.FIELD_WIDTH):
+            for j in range(GameField.FIELD_HEIGHT):
+                self.serialized.append(self._game_field[i][j])
 
     def update(self, key):
         self._game_field[self._paddle_position[0]][self._paddle_position[1]] = ElementSymbol.NONE
