@@ -51,15 +51,12 @@ class Game:
         self.game_field.update_ball()
 
         if self.game_field.check_win():
-            print("player won")
-            print("Fitness: " + str(self.fitness))
             self._running = False
 
         if self._pooled_event is not None:
             self._pooled_event = None
 
     def on_render(self):
-        print('render')
         self._display_surface.fill((255, 255, 255))
         self.draw_grid()
         self.visualize_game_filed(self.game_field.get_game_field())
@@ -113,4 +110,14 @@ class Game:
                 tick = time.clock()
             self.on_render()
 
+        print("fitness: " + str(self.fitness))
         self.on_cleanup()
+
+    def simulate(self, moves):
+        while self._running:
+            if len(moves) > 0:
+                self.on_event(False, moves.pop(0))
+            else:
+                self.on_event(False, '-')
+            self.on_loop()
+        return self.fitness
