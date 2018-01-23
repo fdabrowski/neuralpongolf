@@ -11,7 +11,7 @@ class ElementSymbol(Enum):
 class GameField:
     FIELD_SIZE = FIELD_WIDTH, FIELD_HEIGHT = 20, 20
 
-    def __init__(self):
+    def __init__(self, seed):
         self._game_field = [[0 for x in range(GameField.FIELD_WIDTH)] for y in range(GameField.FIELD_HEIGHT)]
 
         self._hole_position = None
@@ -20,7 +20,7 @@ class GameField:
         self._paddle_horizontal = True
         self._ball_direction = (-1, 1)  # [0]: -1 - left, 1 - right; [1]: -1 - up, 1 - down
 
-        self.place_elements('03-03;17-05;08-10')
+        self.place_elements(seed)
 
     def place_elements(self, seed = ''):
         if len(seed) == 17:
@@ -77,6 +77,9 @@ class GameField:
 
             self._paddle_horizontal = not self._paddle_horizontal
 
+        if key == '-':
+            pass
+
         self.place_elements()
 
     def get_game_field(self):
@@ -104,6 +107,6 @@ class GameField:
         self._game_field[self._ball_position[0]][self._ball_position[1]] = ElementSymbol.BALL
 
     def check_win(self):
-        if  0 <= self._ball_position[0] - self._hole_position[0] <= 1 and 0 <= self._ball_position[1] - self._hole_position[1] <= 1:
+        if 0 <= self._ball_position[0] - self._hole_position[0] <= 1 and 0 <= self._ball_position[1] - self._hole_position[1] <= 1:
             return True
         return False

@@ -5,13 +5,13 @@ from src.game_field import GameField, ElementSymbol
 
 class Game:
     GAME_SCALE = 20
-    TICKS_PER_SECOND = 100
+    TICKS_PER_SECOND = 10
 
-    def __init__(self):
+    def __init__(self, seed='03-03;17-05;08-10'):
         self._running = True
         self._display_surface = None
         self.size = self.width, self.height = tuple((i*(Game.GAME_SCALE+1))-1 for i in GameField.FIELD_SIZE)
-        self.game_field = GameField()
+        self.game_field = GameField(seed)
         self.current_frame_game_field = self.game_field.get_game_field()
         self._pooled_event = None
         self.tick_length = 1000 / Game.TICKS_PER_SECOND
@@ -23,23 +23,27 @@ class Game:
         self._running = True
         return True
 
-    def on_event(self, event):
-        if event.type == pygame.QUIT:
-            self._running = False
+    def on_event(self, interactive, event):
+        if interactive:
+            if event.type == pygame.QUIT:
+                self._running = False
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                self._pooled_event = 'u'
-            elif event.key == pygame.K_DOWN:
-                self._pooled_event = 'd'
-            elif event.key == pygame.K_LEFT:
-                self._pooled_event = 'l'
-            elif event.key == pygame.K_RIGHT:
-                self._pooled_event = 'r'
-            elif event.key == pygame.K_SPACE:
-                self._pooled_event = 's'
-            else:
-                self._pooled_event = None
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    self._pooled_event = 'u'
+                elif event.key == pygame.K_DOWN:
+                    self._pooled_event = 'd'
+                elif event.key == pygame.K_LEFT:
+                    self._pooled_event = 'l'
+                elif event.key == pygame.K_RIGHT:
+                    self._pooled_event = 'r'
+                elif event.key == pygame.K_SPACE:
+                    self._pooled_event = 's'
+                else:
+                    self._pooled_event = None
+
+        else:
+            self._pooled_event = event
 
     def on_loop(self):
         self.fitness += 1
@@ -55,6 +59,7 @@ class Game:
             self._pooled_event = None
 
     def on_render(self):
+        print('render')
         self._display_surface.fill((255, 255, 255))
         self.draw_grid()
         self.visualize_game_filed(self.game_field.get_game_field())
@@ -86,15 +91,24 @@ class Game:
                 if field[x][y] == ElementSymbol.PADDLE:
                     self._display_surface.fill((0, 0, 255), pygame.Rect(val_x, val_y, Game.GAME_SCALE, Game.GAME_SCALE))
 
-    def run(self):
+    def run(self, moves=None):
         tick = time.clock()
+
         if not self.on_init():
             self._running = False
 
         while self._running:
             for event in pygame.event.get():
-                self.on_event(event)
+                if event.type == pygame.QUIT:
+                    self._running = False
+                if moves is None:
+                    self.on_event(True, event)
             if time.clock() - tick > self.tick_length / 1000:
+                if moves is not None:
+                    if len(moves) > 0:
+                        self.on_event(False, moves.pop(0))
+                    else:
+                        self.on_event(False, '-')
                 self.on_loop()
                 tick = time.clock()
             self.on_render()
