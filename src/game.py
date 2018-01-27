@@ -1,13 +1,40 @@
 import pygame
 import time
 from src.game_field import GameField, ElementSymbol
+from random import randint
 
 
 class Game:
     GAME_SCALE = 20
-    TICKS_PER_SECOND = 100
+    TICKS_PER_SECOND = 10
 
-    def __init__(self, seed='03-03;17-05;08-10'):
+    @staticmethod
+    def generate_seed():
+        hole_position = (randint(0, 18), randint(0, 18))
+        ball_position = (randint(0, 19), randint(0, 19))
+        paddle_position = (randint(0, 15), randint(0, 18))
+
+        while True:
+            if 0 < abs(ball_position[0] - hole_position[0]) < 2:
+                if 0 < abs(ball_position[1] - hole_position[1]) < 2:
+                    ball_position = (randint(0, 19), randint(0, 19))
+                    continue
+
+            if 0 < abs(ball_position[0] - paddle_position[0]) < 4:
+                if 0 < abs(ball_position[1] - paddle_position[1]) < 2:
+                    paddle_position = (randint(0, 15), randint(0, 19))
+                    continue
+
+            break
+
+        seed = str(hole_position[0]).zfill(2) + '-' + str(hole_position[1]).zfill(2) + ';'
+        seed += str(ball_position[0]).zfill(2) + '-' + str(ball_position[1]).zfill(2) + ';'
+        seed += str(paddle_position[0]).zfill(2) + '-' + str(paddle_position[1]).zfill(2)
+        print(seed)
+
+        return seed
+
+    def __init__(self, seed='03-03;00-00;01-00'):
         self.running = True
         self._display_surface = None
         self.size = self.width, self.height = tuple((i*(Game.GAME_SCALE+1))-1 for i in GameField.FIELD_SIZE)
@@ -93,6 +120,7 @@ class Game:
                     self._display_surface.fill((0, 0, 255), pygame.Rect(val_x, val_y, Game.GAME_SCALE, Game.GAME_SCALE))
 
     def run(self, net=None, gui=True):
+        combo = []
         tick = time.clock()
 
         if not self.on_init(gui):
@@ -113,6 +141,7 @@ class Game:
                         output = net.activate(self.game_field.serialized)
                         selected = int(5 * output[0])
                         move = ('u', 'd', 'r', 'l', 's', '-')[selected]
+                        combo.append(move)
                         self.on_event(False, move)
                     self.on_loop()
                 self.on_render()
@@ -128,6 +157,8 @@ class Game:
         if gui:
             print("Fitness: " + str(self.fitness))
             self.on_cleanup()
+
+        return ''.join(combo)
 
 
     def simulate(self, moves):

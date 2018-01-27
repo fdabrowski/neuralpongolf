@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum
+from enum import IntEnum
 
 
 class ElementSymbol(IntEnum):
@@ -19,7 +19,7 @@ class GameField:
         self._ball_position = None
         self._paddle_position = None
         self._paddle_horizontal = True
-        self._ball_direction = (-1, 1)  # [0]: -1 - left, 1 - right; [1]: -1 - up, 1 - down
+        self._ball_direction = (1, -1)  # [0]: -1 - left, 1 - right; [1]: -1 - up, 1 - down
 
         self.place_elements(seed)
 
@@ -27,6 +27,27 @@ class GameField:
         for i in range(GameField.FIELD_WIDTH):
             for j in range(GameField.FIELD_HEIGHT):
                 self.serialized.append(self._game_field[i][j])
+
+        self.simple_serialized = [0,0, 0,0, 0,0, 0,0,
+                                  0,0, 0,0, 0,0, 0,0,
+                                  0,0]
+        blue_point = 0
+        black_point = 0
+        for i in range(GameField.FIELD_WIDTH):
+            for j in range(GameField.FIELD_HEIGHT):
+                if self._game_field[i][j] == ElementSymbol.PADDLE:
+                    self.simple_serialized[blue_point*2] = i
+                    self.simple_serialized[blue_point*2+1] = j
+                    blue_point += 1
+
+                if self._game_field[i][j] == ElementSymbol.HOLE:
+                    self.simple_serialized[8+black_point*2] = i
+                    self.simple_serialized[8+black_point*2+1] = j
+                    black_point += 1
+
+                if self._game_field[i][j] == ElementSymbol.BALL:
+                    self.simple_serialized[16] = i
+                    self.simple_serialized[17] = j
 
     def place_elements(self, seed = ''):
         if len(seed) == 17:
@@ -54,6 +75,27 @@ class GameField:
         for i in range(GameField.FIELD_WIDTH):
             for j in range(GameField.FIELD_HEIGHT):
                 self.serialized.append(self._game_field[i][j])
+
+        self.simple_serialized = [0,0, 0,0, 0,0, 0,0,
+                                  0,0, 0,0, 0,0, 0,0,
+                                  0,0]
+        blue_point = 0
+        black_point = 0
+        for i in range(GameField.FIELD_WIDTH):
+            for j in range(GameField.FIELD_HEIGHT):
+                if self._game_field[i][j] == ElementSymbol.PADDLE:
+                    self.simple_serialized[blue_point*2] = i
+                    self.simple_serialized[blue_point*2+1] = j
+                    blue_point += 1
+
+                if self._game_field[i][j] == ElementSymbol.HOLE:
+                    self.simple_serialized[8+black_point*2] = i
+                    self.simple_serialized[8+black_point*2+1] = j
+                    black_point += 1
+
+                if self._game_field[i][j] == ElementSymbol.BALL:
+                    self.simple_serialized[16] = i
+                    self.simple_serialized[17] = j
 
     def update(self, key):
         self._game_field[self._paddle_position[0]][self._paddle_position[1]] = ElementSymbol.NONE
@@ -103,14 +145,14 @@ class GameField:
         if 0 > self._ball_position[0] + self._ball_direction[0] or self._ball_position[0] + self._ball_direction[0] >= GameField.FIELD_WIDTH:
             self._ball_direction = (self._ball_direction[0] * -1, self._ball_direction[1])
 
+        elif self._game_field[self._ball_position[0]+self._ball_direction[0]][self._ball_position[1]] == ElementSymbol.PADDLE:
+            self._ball_direction = (self._ball_direction[0] * -1, self._ball_direction[1])
+
         # bounce up <-> down
         if 0 > self._ball_position[1] + self._ball_direction[1] or self._ball_position[1] + self._ball_direction[1] >= GameField.FIELD_WIDTH:
             self._ball_direction = (self._ball_direction[0], self._ball_direction[1] * -1)
 
-        if self._game_field[self._ball_position[0]+self._ball_direction[0]][self._ball_position[1]] == ElementSymbol.PADDLE:
-            self._ball_direction = (self._ball_direction[0] * -1, self._ball_direction[1])
-
-        if self._game_field[self._ball_position[0]][self._ball_position[1]+self._ball_direction[1]] == ElementSymbol.PADDLE:
+        elif self._game_field[self._ball_position[0]][self._ball_position[1]+self._ball_direction[1]] == ElementSymbol.PADDLE:
             self._ball_direction = (self._ball_direction[0], self._ball_direction[1] * -1)
 
         self._ball_position = (self._ball_position[0] + self._ball_direction[0], self._ball_position[1] + self._ball_direction[1])
