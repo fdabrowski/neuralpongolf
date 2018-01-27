@@ -5,7 +5,7 @@ import src.visualize as visualize
 
 
 class NeuralNetwork:
-    GENERATIONS = 100
+    GENERATIONS = 20
 
     def __init__(self, random_seed=False, game_seed=None):
         self.config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -61,4 +61,4 @@ class NeuralNetwork:
     def run(self):
         self.winner = self.population.run(self.evaluate_genome, NeuralNetwork.GENERATIONS)
         self.visualize_results()
-        self.play_winner()
+        return self.winner
