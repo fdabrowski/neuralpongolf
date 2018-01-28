@@ -6,7 +6,7 @@ from random import randint
 
 class Game:
     GAME_SCALE = 20
-    TICKS_PER_SECOND = 10
+    TICKS_PER_SECOND = 100
 
     @staticmethod
     def generate_seed():
@@ -30,7 +30,6 @@ class Game:
         seed = str(hole_position[0]).zfill(2) + '-' + str(hole_position[1]).zfill(2) + ';'
         seed += str(ball_position[0]).zfill(2) + '-' + str(ball_position[1]).zfill(2) + ';'
         seed += str(paddle_position[0]).zfill(2) + '-' + str(paddle_position[1]).zfill(2)
-        print(seed)
 
         return seed
 
@@ -138,7 +137,7 @@ class Game:
                 if time.clock() - tick > self.tick_length / 1000:
                     tick = time.clock()
                     if net is not None:
-                        output = net.activate(self.game_field.serialized)
+                        output = net.activate(self.game_field.simple_serialized)
                         selected = int(5 * output[0])
                         move = ('u', 'd', 'r', 'l', 's', '-')[selected]
                         combo.append(move)
@@ -148,7 +147,7 @@ class Game:
 
             else:
                 if net is not None:
-                    output = net.activate(self.game_field.serialized)
+                    output = net.activate(self.game_field.simple_serialized)
                     selected = int(5 * output[0])
                     move = ('u', 'd', 'r', 'l', 's', '-')[selected]
                     self.on_event(False, move)
@@ -159,7 +158,6 @@ class Game:
             self.on_cleanup()
 
         return ''.join(combo)
-
 
     def simulate(self, moves):
         while self.running:

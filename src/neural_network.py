@@ -5,9 +5,7 @@ import src.visualize as visualize
 
 
 class NeuralNetwork:
-    GENERATIONS = 20
-
-    def __init__(self, random_seed=False, game_seed=None):
+    def __init__(self, random_seed=False, game_seed=None, generations=20, multimap=False):
         self.config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                                   neat.DefaultSpeciesSet, neat.DefaultStagnation,
                                   os.path.join(os.path.dirname(__file__), '../config'))
@@ -20,6 +18,10 @@ class NeuralNetwork:
 
         self.random_seed = random_seed
         self.game_seed = game_seed
+
+        self.generations = generations
+
+        self.multimap = multimap
 
         self.winner = None
 
@@ -44,6 +46,18 @@ class NeuralNetwork:
 
             genome.fitness = game.fitness
 
+    def evaluate_multimap_genome(self, genomes, config):
+        for genome_id, genome in genomes:
+            net = neat.nn.FeedForwardNetwork.create(genome, config)
+            results = []
+
+            for seed in self.game_seed:
+                game = Game(seed)
+                game.run(net, False)
+                results.append(game.fitness)
+
+            genome.fitness = sum(results) / float(len(results))
+
     def play_winner(self):
         net = neat.nn.FeedForwardNetwork.create(self.winner, self.config)
 
@@ -59,6 +73,8 @@ class NeuralNetwork:
             game.run(net, True)
 
     def run(self):
-        self.winner = self.population.run(self.evaluate_genome, NeuralNetwork.GENERATIONS)
-        self.visualize_results()
+        if not self.multimap:
+            self.winner = self.population.run(self.evaluate_genome, self.generations)
+        else:
+            self.winner = self.population.run(self.evaluate_multimap_genome, self.generations)
         return self.winner

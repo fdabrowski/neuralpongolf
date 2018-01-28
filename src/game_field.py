@@ -28,9 +28,9 @@ class GameField:
             for j in range(GameField.FIELD_HEIGHT):
                 self.serialized.append(self._game_field[i][j])
 
-        self.simple_serialized = [0,0, 0,0, 0,0, 0,0,
-                                  0,0, 0,0, 0,0, 0,0,
-                                  0,0]
+        self.simple_serialized = [0,0, 0,0, 0,0, 0,0, # paddle position
+                                  0,0, 0,0, 0,0, 0,0, # hole position
+                                  0,0] # ball position
         blue_point = 0
         black_point = 0
         for i in range(GameField.FIELD_WIDTH):
