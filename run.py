@@ -27,7 +27,7 @@ if __name__ == "__main__":
     if args.multimap:
         seed = []
 
-        for i in range(100):
+        for i in range(50):
             seed.append(Game.generate_seed())
 
         generations = 100

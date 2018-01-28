@@ -6,7 +6,7 @@ from random import randint
 
 class Game:
     GAME_SCALE = 20
-    TICKS_PER_SECOND = 100
+    TICKS_PER_SECOND = 10
 
     @staticmethod
     def generate_seed():
